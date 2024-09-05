@@ -1,0 +1,36 @@
+---
+name: Build main
+on:
+  push:
+    branches: [main]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.22
+      - name: Setup msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          release: false
+          update: true
+          install: base-devel mingw-w64-x86_64-gcc
+      - name: Add mingw to the system path
+        run: |
+          echo "C:\\msys64\\mingw64\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Build shelidate_bin.exe
+        run: gcc shellcode/main.c -o shelidate_bin.exe --entry=entry -nostdlib -ffunction-sections -fno-asynchronous-unwind-tables -fno-ident '-Wl,--strip-all,--no-seh,-Tshellcode/main.S'
+      - name: Extract shelidate.bin
+        run: objcopy -O binary --only-section=.text shelidate_bin.exe shelidate.bin
+      - name: Build shelidate
+        run: go build -o shelidate.exe ./cmd/...
+      - name: Upload Shelidate
+        uses: actions/upload-artifact@v3
+        with:
+          name: Shelidate
+          path: shelidate.exe
+          retention-days: 7
