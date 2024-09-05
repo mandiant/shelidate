@@ -8,9 +8,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v4
         with:
           go-version: 1.22
       - name: Setup msys2
@@ -29,7 +29,7 @@ jobs:
       - name: Build shelidate
         run: go build -o shelidate.exe ./cmd/...
       - name: Upload Shelidate
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Shelidate
           path: shelidate.exe
