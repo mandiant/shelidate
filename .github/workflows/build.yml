@@ -3,6 +3,8 @@ name: Build main
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 jobs:
   build:
     runs-on: windows-latest
@@ -34,3 +36,7 @@ jobs:
           name: Shelidate
           path: shelidate.exe
           retention-days: 7
+      - name: Run example/simple tests
+        run: go test -timeout 30s -v ./examples/simple/...
+      - name: Run example/options tests
+        run: go test -timeout 30s -v ./examples/options/...

